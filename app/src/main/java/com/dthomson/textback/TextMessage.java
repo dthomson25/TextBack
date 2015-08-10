@@ -6,47 +6,66 @@ import android.os.Parcelable;
 /**
  * Created by dthomson on 8/6/2015.
  */
-public class TextMessage implements Parcelable {
-    private String person;
-    private String conversation;
+public class TextMessage {
+    private String address;
+    private String lastText;
+    private String threadId;
+    private String pictureID;
+    private String picture_Data;
 
-    public int describeContents(){
-        return 0;
+    public TextMessage(String address, String lastText, String threadId, String pictureID, String picture_Data) {
+        this.address = address;
+        this.lastText = lastText;
+        this.threadId = threadId;
+        this.pictureID = pictureID;
+        this.picture_Data = picture_Data;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeStringArray(new String[]{this.person,
-                this.conversation});
-    }
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
-        public TextMessage createFromParcel(Parcel in) {
-            return new TextMessage(in);
-        }
-
-        public TextMessage[] newArray(int size) {
-            return new TextMessage[size];
-        }
-    };
-
-
-    public TextMessage(String person, String conversation) {
-        this.person = person;
-        this.conversation = conversation;
+    public TextMessage(String address, String lastText) {
+        this.address = address;
+        this.lastText = lastText;
+        this.threadId = null;
+        this.pictureID = null;
+        this.picture_Data = null;
     }
 
-    public TextMessage(Parcel in) {
-        String[] data = new String[2];
-
-        in.readStringArray(data);
-        this.person = data[0];
-        this.conversation = data[1];
+    public String getAddress() {
+        return address;
     }
 
-    public String getPerson() {
-        return this.person;
+    public void setAddress(String address) {
+        this.address = address;
     }
-    public String getConversation() {
-        return this.conversation;
+
+    public String getLastText() {
+        return lastText;
+    }
+
+    public void setLastText(String lastText) {
+        this.lastText = lastText;
+    }
+
+    public String getThreadId() {
+        return threadId;
+    }
+
+    public void setThreadId(String threadId) {
+        this.threadId = threadId;
+    }
+
+    public String getPictureID() {
+        return pictureID;
+    }
+
+    public void setPictureID(String pictureID) {
+        this.pictureID = pictureID;
+    }
+
+    public String getPicture_Data() {
+        return picture_Data;
+    }
+
+    public void setPicture_Data(String picture_Data) {
+        this.picture_Data = picture_Data;
     }
 }

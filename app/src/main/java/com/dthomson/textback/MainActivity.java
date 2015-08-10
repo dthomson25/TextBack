@@ -1,6 +1,12 @@
 package com.dthomson.textback;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.CharArrayBuffer;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.database.DataSetObserver;
+import android.net.Uri;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,19 +25,16 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     private String FILENAME = "saved_texts";
     private MyRecyclerAdapter myRecyclerAdapter;
+    private TextMessageDB dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState != null) {
-            ArrayList<TextMessage> values = savedInstanceState.getParcelableArrayList("myTextMessages");
-            if (values != null) {
-                myRecyclerAdapter = new MyRecyclerAdapter(values);
-            }
-        } else {
-            myRecyclerAdapter = new MyRecyclerAdapter(generateBooks());
-        }
+        dbHelper = new TextMessageDB(this);
+        dbHelper.open();
+        Cursor c = dbHelper.getAllTexts();
+        myRecyclerAdapter= new MyRecyclerAdapter(this,c);
         setContentView(R.layout.activity_main);
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerList);
         LinearLayoutManager linearLM = new LinearLayoutManager(this);
@@ -45,22 +48,12 @@ public class MainActivity extends AppCompatActivity {
 
         super.onSaveInstanceState(savedState);
 
-        // Note: getValues() is a method in your ArrayAdaptor subclass
-        List<TextMessage> values = myRecyclerAdapter.getTexts();
-        ArrayList<TextMessage> valueToSave = new ArrayList<>(values);
-        savedState.putParcelableArrayList("myTextMessages", valueToSave);
+//        // Note: getValues() is a method in your ArrayAdaptor subclass
+//        List<TextMessage> values = myRecyclerAdapter.getTexts();
+//        ArrayList<TextMessage> valueToSave = new ArrayList<>(values);
+//        savedState.putParcelableArrayList("myTextMessages", valueToSave);
 
     }
-
-    private ArrayList<TextMessage> generateBooks() {
-        ArrayList<TextMessage> texts = new ArrayList<>();
-        texts.add(new TextMessage("RED", "#Hi Red, how are you??"));
-        texts.add(new TextMessage("RED", "#Hi Red, how are you??"));
-        texts.add(new TextMessage("RED", "#Hi Red, how are you??"));
-        texts.add(new TextMessage("RED", "#Hi Red, how are you??"));
-        return texts;
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -75,7 +68,9 @@ public class MainActivity extends AppCompatActivity {
         if(myRecyclerAdapter.getItemCount() != 0) {
             count = myRecyclerAdapter.getItemCount();
         }
-        myRecyclerAdapter.addData(text, count);
+        dbHelper.addTextMessage(text);
+        Cursor cursor = dbHelper.getAllTexts();
+        myRecyclerAdapter.addTextMessage(cursor, count);
     }
 
     @Override
@@ -86,7 +81,12 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if(id == R.id.action_default) {
-            myRecyclerAdapter.defaultCards();
+            dbHelper.deleteAllTexts();
+            Cursor emptyCursor = dbHelper.getAllTexts();
+            myRecyclerAdapter.clearTexts(emptyCursor);
+            dbHelper.insertSomeTexts();
+            Cursor cursor = dbHelper.getAllTexts();
+            myRecyclerAdapter.defaultCards(cursor);
             return true;
         }
 
@@ -94,9 +94,13 @@ public class MainActivity extends AppCompatActivity {
             addNewTextMessage();
             return true;
         }
+
         if (id == R.id.action_clear) {
-            myRecyclerAdapter.clearTexts();
+            dbHelper.deleteAllTexts();
+            Cursor cursor = dbHelper.getAllTexts();
+            myRecyclerAdapter.clearTexts(cursor);
             return true;
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -105,23 +109,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause(){
         super.onPause();
-//        List<TextMessage> values = myRecyclerAdapter.getTexts();
-//        ArrayList<TextMessage> valueToSave = new ArrayList<>(values);
-//        String FILENAME = "hello_file";
-//        FileOutputStream outputStream;
-//        try {
-//            outputStream = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-//            for (TextMessage text: values) {
-//                String writeOutStr = text.toString();
-//                outputStream = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-//                outputStream.write(writeOutStr.getBytes());
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        outputStream.close();
-
-
     }
 
 }
