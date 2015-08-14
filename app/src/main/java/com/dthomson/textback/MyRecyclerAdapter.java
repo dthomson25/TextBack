@@ -12,16 +12,13 @@ import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
 
     CursorAdapter mCursorAdapter;
 
     Context mContext;
 
-    public MyRecyclerAdapter(Context context, Cursor c) {
+    public MyRecyclerAdapter(Context context, final Cursor c) {
 
         mContext = context;
 
@@ -30,42 +27,31 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
             @Override
             public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
                 View itemView = LayoutInflater.
-                        from(viewGroup.getContext()).
+                        from(context).
                         inflate(R.layout.card_view, viewGroup, false);
             return itemView;
             }
 
             @Override
             public void bindView(View view, Context context, Cursor cursor) {
-//                TextMessage text = texts.get(i);
-                if (cursor != null) {
-                    TextMessage text = new TextMessage("REd","red");
-                    TextView  addr = (TextView) view.findViewById(R.id.person);
+//                if (cursor != null) {
+                    String address = cursor.getString(cursor.getColumnIndex("address"));
+                    String lastText = cursor.getString(cursor.getColumnIndex("last_text"));
+                    TextMessage text = new TextMessage(address,lastText);
+                    TextView  addr = (TextView) view.findViewById(R.id.address);
                     addr.setText(text.getAddress());
-                    TextView lastText = (TextView) view.findViewById(R.id.person);
-                    lastText.setText(text.getAddress());
-                }
+                    TextView lastTextTB = (TextView) view.findViewById(R.id.last_text);
+                    lastTextTB.setText(text.getLastText());
+//                }
+
 
             }
         };
     }
 
 
-
-//    private List<TextMessage> texts;
-//
-//    public MyRecyclerAdapter(List<TextMessage> texts) {
-////        this.texts = new ArrayList<>();
-////        this.texts.addAll(texts);
-//    }
-
-//    public List<TextMessage> getTexts() {
-//        return texts;
-//    }
-
     public void addTextMessage(Cursor cursor, int position) {
         mCursorAdapter.changeCursor(cursor);
-//        texts.add(position, textMessage);
         notifyItemInserted(position);
     }
 
@@ -79,7 +65,9 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
 
     @Override
     public void onBindViewHolder(TextViewHolder holder, int i) {
-
+        Cursor c = mCursorAdapter.getCursor();
+        int position = c.getPosition();
+        c.move(i - position);
         mCursorAdapter.bindView(holder.itemView, mContext, mCursorAdapter.getCursor());
     }
 
@@ -97,9 +85,14 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
         mCursorAdapter.changeCursor(cursor);
     }
 
-    public void clearTexts(Cursor cursor) {
+    public void clearTexts() {
         int size = mCursorAdapter.getCount();
-        mCursorAdapter.changeCursor(cursor);
-        notifyItemRangeRemoved(0,size);
+        notifyItemRangeRemoved(0, size);
     }
+
+    public void deleteText(Cursor c, int swipeDir) {
+        mCursorAdapter.changeCursor(c);
+        notifyItemRemoved(swipeDir);
+    }
+
 }

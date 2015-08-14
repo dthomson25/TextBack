@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 
@@ -38,6 +39,10 @@ public class TextMessageDB {
              KEY_THREAD_ID + "," +
              KEY_PICTURE_ID + "," +
              KEY_PICTURE_DATA + ");";
+
+    public void deleteText(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+
+    }
 
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -108,26 +113,6 @@ public class TextMessageDB {
 
     }
 
-    public Cursor getTextsByAddr(String inputText) throws SQLException {
-        Log.w(TAG, inputText);
-        Cursor mCursor = null;
-        if (inputText == null || inputText.length() == 0) {
-            mCursor = mDb.query(SQLITE_TABLE, new String[]{KEY_ROWID,
-                            KEY_ADDRESS, KEY_LAST_TEXT, KEY_THREAD_ID, KEY_PICTURE_ID, KEY_PICTURE_DATA},
-                    null, null, null, null, null);
-        } else {
-            mCursor = mDb.query(true, SQLITE_TABLE, new String[]{KEY_ROWID,
-                            KEY_ADDRESS, KEY_LAST_TEXT, KEY_THREAD_ID, KEY_PICTURE_ID, KEY_PICTURE_DATA},
-                    KEY_ADDRESS + " like '%" + inputText + "%'", null,
-                    null, null, null, null);
-        }
-        if (mCursor != null) {
-            mCursor.moveToFirst();
-        }
-        return mCursor;
-
-    }
-
     public Cursor getAllTexts() {
 
         Cursor mCursor = mDb.query(SQLITE_TABLE, new String[]{KEY_ROWID,
@@ -141,12 +126,9 @@ public class TextMessageDB {
     }
 
     public void insertSomeTexts() {
-        addTextMessage("Red", null, "hi Red how are you?", null, null);
-        addTextMessage("Red", null, "hi Red how are you?", null, null);
-        addTextMessage("Red", null, "hi Red how are you?", null, null);
-//        insertTextMessage("Red", null, "hi Red how are you?", null, null);
-//        insertTextMessage("Red", null, "hi Red how are you?", null, null);
-//        insertTextMessage("Blue", null, "But why blue????", null, null);
+        addTextMessage("Red", null, "I'm da best", null, null);
+        addTextMessage("Green", null, "I'm important too!!", null, null);
+        addTextMessage("Yellow", null, "Piku", null, null);
     }
 
 }

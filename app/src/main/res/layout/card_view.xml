@@ -12,9 +12,8 @@
         android:id="@+id/cardBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
         <TextView
-            android:id="@+id/person"
+            android:id="@+id/address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Title"
@@ -23,17 +22,18 @@
             android:textSize="30dp"/>
 
         <TextView
-            android:id="@+id/conversation"
+            android:id="@+id/last_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Content"
             android:gravity="center_vertical"
             android:textColor="@android:color/black"
             android:textSize="15dp"
-            android:layout_below="@+id/person"
+            android:layout_below="@+id/address"
             android:layout_marginTop="10dp"
             android:layout_marginLeft="5dp"/>
 
     </RelativeLayout>
 
 </android.support.v7.widget.CardView>
+

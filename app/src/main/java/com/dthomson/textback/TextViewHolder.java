@@ -6,35 +6,32 @@ package com.dthomson.textback;
 
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class TextViewHolder extends RecyclerView.ViewHolder {
+    private static final String TAG = "viewholder";
 
+    private TextMessage text;
     protected TextView titleText;
     protected TextView contentText;
     protected CardView card;
 
     public TextViewHolder(View itemView) {
         super(itemView);
-        titleText = (TextView) itemView.findViewById(R.id.person);
-        contentText = (TextView) itemView.findViewById(R.id.conversation);
+        // Define click listener for the ViewHolder's View.
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                mListener.onTextSelected(null);
+                Toast.makeText(v.getContext(), "hi", Toast.LENGTH_SHORT).show();
+            }
+        });
+        titleText = (TextView) itemView.findViewById(R.id.address);
+        contentText = (TextView) itemView.findViewById(R.id.last_text);
         card = (CardView) itemView;
     }
 
 }
-
-//public static class TextViewHolder extends RecyclerView.ViewHolder{
-//
-//    View v1;
-//    protected TextView titleText;
-//protected TextView contentText;
-//protected CardView card;
-//    public ViewHolder(View itemView) {
-//        super(itemView);
-//        v1 = itemView.findViewById(R.id.v1);
-//        titleText = (TextView) itemView.findViewById(R.id.person);
-//        contentText = (TextView) itemView.findViewById(R.id.conversation);
-//        card = (CardView) itemView;
-//    }
-//}
