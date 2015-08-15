@@ -13,9 +13,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import com.dthomson.textback.interfaces.OnTextClickListener;
+
+public class MainActivity extends AppCompatActivity
+        implements OnTextClickListener {
     private DisplayTextsFrag displayFrag;
 
 

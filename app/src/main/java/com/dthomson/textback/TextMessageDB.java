@@ -40,8 +40,12 @@ public class TextMessageDB {
              KEY_PICTURE_ID + "," +
              KEY_PICTURE_DATA + ");";
 
-    public void deleteText(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-
+    public void deleteText(int delete) {
+        String selection = KEY_ROWID + " LIKE ?";
+// Specify arguments in placeholder order.
+        String[] selectionArgs = { String.valueOf(delete) };
+// Issue SQL statement.
+        mDb.delete(SQLITE_TABLE, selection, selectionArgs);
     }
 
 
