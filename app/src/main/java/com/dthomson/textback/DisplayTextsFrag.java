@@ -1,31 +1,37 @@
 package com.dthomson.textback;
 
-import android.app.Activity;
 import android.database.Cursor;
-import android.net.Uri;
+import android.graphics.Canvas;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RadioButton;
+import android.widget.Toast;
+
+import com.dthomson.textback.interfaces.OnStartDragListener;
+import com.dthomson.textback.interfaces.ItemTouchHelperViewHolder;
 
 
-public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
+public class DisplayTextsFrag  extends android.support.v4.app.Fragment
+        implements OnStartDragListener {
+
+    private ItemTouchHelper mItemTouchHelper;
+
     private String FILENAME = "saved_texts";
 
     private static final String TAG = "RecyclerViewFragment";
-//    private Cursor currentCursor;
     private TextMessageDB dbHelper;
 
     protected RecyclerView mRecyclerView;
     protected MyRecyclerAdapter mAdapter;
+
     protected RecyclerView.LayoutManager mLayoutManager;
 
     @Override
@@ -83,23 +89,92 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
         Cursor cursor = dbHelper.getAllTexts();
-        mAdapter = new MyRecyclerAdapter(getActivity(),cursor);
+        mAdapter = new MyRecyclerAdapter(getActivity(),cursor,this);
         // Set CustomAdapter as the adapter for RecyclerView.
         mRecyclerView.setAdapter(mAdapter);
+        ItemTouchHelper.Callback callback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP|ItemTouchHelper.DOWN,
+                ItemTouchHelper.START | ItemTouchHelper.END) {
+            public static final float ALPHA_FULL = 1.0f;
+
+            @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    // Fade out the view as it is swiped out of the parent's bounds
+                    final float alpha = ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
+                    viewHolder.itemView.setAlpha(alpha);
+                    viewHolder.itemView.setTranslationX(dX);
+                } else {
+                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                }
+            }
+
+            @Override
+            public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+                // We only want the active item to change
+                if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
+                    if (viewHolder instanceof ItemTouchHelperViewHolder) {
+                        // Let the view holder know that this item is being moved or dragged
+                        ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+                        itemViewHolder.onItemSelected();
+                    }
+                }
+
+                super.onSelectedChanged(viewHolder, actionState);
+            }
+
+            @Override
+            public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+
+                viewHolder.itemView.setAlpha(ALPHA_FULL);
+
+                if (viewHolder instanceof ItemTouchHelperViewHolder) {
+                    // Tell the view holder it's time to restore the idle state
+                    ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+                    itemViewHolder.onItemClear();
+                }
+            }
+
+            @Override
+            public boolean isLongPressDragEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean isItemViewSwipeEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
+                if (source.getItemViewType() != target.getItemViewType()) {
+                    return false;
+                }
+
+                // Notify the adapter of the move
+                mAdapter.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
+                return true;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
+                // Notify the adapter of the dismissal
+                mAdapter.onItemDismiss(viewHolder.getAdapterPosition());
+            }
+        };
+        mItemTouchHelper = new ItemTouchHelper(callback);
+        mItemTouchHelper.attachToRecyclerView(mRecyclerView);
+
+        FloatingActionButton myFab = (FloatingActionButton)  rootView.findViewById(R.id.fab);
+        myFab.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                addNewTextMessage();
+            }
+        });
+
         return rootView;
     }
-//
-//    private OnItemSelectedListener mListener;
-//
-//    @Override
-//    public void onAttach(Activity activity) {
-//        super.onAttach(activity);
-//        try {
-//            mListener = (OnItemSelectedListener) activity;
-//        } catch (ClassCastException e) {
-//            throw new ClassCastException(activity.toString() + " must implement OnArticleSelectedListener");
-//        }
-//    }
 
     public void addNewTextMessage() {
         TextMessage text = new TextMessage("Blue","Forget you Red");
@@ -124,6 +199,16 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         dbHelper.deleteAllTexts();
         Cursor emptyCursor = dbHelper.getAllTexts();
         mAdapter.changeCursor(emptyCursor);
+    }
+
+    @Override
+    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
+        mItemTouchHelper.startDrag(viewHolder);
+    }
+
+    @Override
+    public void deleteText(int position) {
+        dbHelper.deleteText(position);
     }
 //    public interface OnItemSelectedListener {
 //        public void onTextSelected(TextMessage textMessage);
