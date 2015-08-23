@@ -23,7 +23,7 @@ public class TextMessageDB {
 
     private static final String TAG = "TextDbAdapter";
     private DatabaseHelper mDbHelper;
-    private SQLiteDatabase mDb;
+    private static SQLiteDatabase mDb;
 
     private static final String DATABASE_NAME = "Text Messages";
     private static final String SQLITE_TABLE = "Conversations";
@@ -82,7 +82,7 @@ public class TextMessageDB {
             mDbHelper.close();
         }
     }
-    public long addTextMessage(TextMessage text) {
+    public static long addTextMessage(TextMessage text) {
         return addTextMessage(text.getAddress(),
                 text.getThreadId(),
                 text.getLastText(),
@@ -90,7 +90,7 @@ public class TextMessageDB {
                 text.getPicture_Data());
     }
 
-    public long addTextMessage(String address, String threadId, String lastText,
+    public static long addTextMessage(String address, String threadId, String lastText,
                                   String pictureID, String pictureData) {
 
         ContentValues initialValues = new ContentValues();
@@ -113,7 +113,7 @@ public class TextMessageDB {
 
     }
 
-    public Cursor getAllTexts() {
+    public static Cursor getAllTexts() {
 
         Cursor mCursor = mDb.query(SQLITE_TABLE, new String[]{KEY_ROWID,
                         KEY_ADDRESS, KEY_LAST_TEXT, KEY_THREAD_ID, KEY_PICTURE_ID, KEY_PICTURE_DATA},
@@ -125,7 +125,7 @@ public class TextMessageDB {
         return mCursor;
     }
 
-    public void insertSomeTexts() {
+    public static void insertSomeTexts() {
         addTextMessage("Red", null, "I'm da best", null, null);
         addTextMessage("Green", null, "I'm important too!!", null, null);
         addTextMessage("Yellow", null, "Piku", null, null);
