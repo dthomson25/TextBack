@@ -8,15 +8,19 @@ import android.os.Parcelable;
  */
 public class TextMessage {
     private String address;
+    private String person;
     private String lastText;
     private String threadId;
+    private String date;
     private String pictureID;
     private String picture_Data;
 
-    public TextMessage(String address, String lastText, String threadId, String pictureID, String picture_Data) {
+    public TextMessage(String address, String person, String lastText, String threadId, String date, String pictureID, String picture_Data) {
         this.address = address;
+        this.person = person;
         this.lastText = lastText;
         this.threadId = threadId;
+        this.date = date;
         this.pictureID = pictureID;
         this.picture_Data = picture_Data;
     }
@@ -67,5 +71,21 @@ public class TextMessage {
 
     public void setPicture_Data(String picture_Data) {
         this.picture_Data = picture_Data;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getPerson() {
+        return person;
+    }
+
+    public void setPerson(String person) {
+        this.person = person;
     }
 }

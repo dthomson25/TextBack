@@ -10,13 +10,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 
-/**
- * Created by dthomson on 8/9/2015.
- */
+import java.util.ArrayList;
+
 public class TextMessageDB {
     public static final String KEY_ROWID = "_id";
     public static final String KEY_ADDRESS = "address";
+    public static final String KEY_PERSON = "person";
     public static final String KEY_LAST_TEXT = "last_text";
+    public static final String KEY_DATE = "date";
     public static final String KEY_THREAD_ID = "thread_id";
     public static final String KEY_PICTURE_ID = "picture_id";
     public static final String KEY_PICTURE_DATA = "picture_data";
@@ -27,7 +28,7 @@ public class TextMessageDB {
 
     private static final String DATABASE_NAME = "Text Messages";
     private static final String SQLITE_TABLE = "Conversations";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
     private final Context mCtx;
 
 
@@ -35,14 +36,15 @@ public class TextMessageDB {
      "CREATE TABLE if not exists " + SQLITE_TABLE +  "(" +
              KEY_ROWID + " integer PRIMARY KEY autoincrement," +
              KEY_ADDRESS + "," +
+             KEY_PERSON + "," +
              KEY_LAST_TEXT + "," +
+             KEY_DATE + "," +
              KEY_THREAD_ID + "," +
              KEY_PICTURE_ID + "," +
              KEY_PICTURE_DATA + ");";
 
-    public void deleteText(RecyclerView.ViewHolder viewHolder, int swipeDir) {
 
-    }
+
 
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -82,32 +84,32 @@ public class TextMessageDB {
             mDbHelper.close();
         }
     }
-    public static long addTextMessage(TextMessage text) {
-        return addTextMessage(text.getAddress(),
-                text.getThreadId(),
-                text.getLastText(),
-                text.getPictureID(),
-                text.getPicture_Data());
+
+    public void addTextMessages(ArrayList<TextMessage> textsToAdd) {
+        for(TextMessage text : textsToAdd) {
+            addTextMessage(text);
+        }
     }
 
-    public static long addTextMessage(String address, String threadId, String lastText,
-                                  String pictureID, String pictureData) {
 
+    public static long addTextMessage(TextMessage text) {
         ContentValues initialValues = new ContentValues();
-        initialValues.put(KEY_ADDRESS, address);
-        initialValues.put(KEY_LAST_TEXT, lastText);
-        initialValues.put(KEY_THREAD_ID, threadId);
-        initialValues.put(KEY_PICTURE_ID, pictureID);
-        initialValues.put(KEY_PICTURE_DATA, pictureData);
+        initialValues.put(KEY_ADDRESS, text.getAddress());
+        initialValues.put(KEY_PERSON, text.getPerson());
+        initialValues.put(KEY_LAST_TEXT, text.getLastText());
+        initialValues.put(KEY_DATE, text.getDate());
+        initialValues.put(KEY_THREAD_ID, text.getThreadId());
+        initialValues.put(KEY_PICTURE_ID, text.getPictureID());
+        initialValues.put(KEY_PICTURE_DATA, text.getPicture_Data());
         Log.w(TAG,Boolean.toString(mDb == null));
 
         return mDb.insert(SQLITE_TABLE, null, initialValues);
     }
 
+
     public boolean deleteAllTexts() {
 
-        int doneDelete = 0;
-        doneDelete = mDb.delete(SQLITE_TABLE, null, null);
+        int doneDelete = mDb.delete(SQLITE_TABLE, null, null);
         Log.w(TAG, Integer.toString(doneDelete));
         return doneDelete > 0;
 
@@ -116,7 +118,8 @@ public class TextMessageDB {
     public static Cursor getAllTexts() {
 
         Cursor mCursor = mDb.query(SQLITE_TABLE, new String[]{KEY_ROWID,
-                        KEY_ADDRESS, KEY_LAST_TEXT, KEY_THREAD_ID, KEY_PICTURE_ID, KEY_PICTURE_DATA},
+                        KEY_ADDRESS, KEY_PERSON, KEY_LAST_TEXT, KEY_DATE, KEY_THREAD_ID,
+                        KEY_PICTURE_ID, KEY_PICTURE_DATA},
                 null, null, null, null, null);
 
         if (mCursor != null) {
@@ -126,9 +129,12 @@ public class TextMessageDB {
     }
 
     public static void insertSomeTexts() {
-        addTextMessage("Red", null, "I'm da best", null, null);
-        addTextMessage("Green", null, "I'm important too!!", null, null);
-        addTextMessage("Yellow", null, "Piku", null, null);
+        TextMessage red = new TextMessage("Red",null,"I'm da best",null,null,null,null);
+        TextMessage yellow = new TextMessage("Yellow",null,"Pika!",null,null,null,null);
+        TextMessage green = new TextMessage("Green",null,"I'm important too!",null,null,null,null);
+        addTextMessage(red);
+        addTextMessage(yellow);
+        addTextMessage(green);
     }
 
 }

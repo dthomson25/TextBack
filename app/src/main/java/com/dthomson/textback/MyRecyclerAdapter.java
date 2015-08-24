@@ -34,17 +34,20 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
 
             @Override
             public void bindView(View view, Context context, Cursor cursor) {
-//                if (cursor != null) {
-                    String address = cursor.getString(cursor.getColumnIndex("address"));
+                    String person = cursor.getString(cursor.getColumnIndex("person"));
                     String lastText = cursor.getString(cursor.getColumnIndex("last_text"));
-                    TextMessage text = new TextMessage(address,lastText);
-                    TextView  addr = (TextView) view.findViewById(R.id.address);
-                    addr.setText(text.getAddress());
+                    if (lastText.length() > 40) {
+                        lastText = lastText.substring(0,40) + "...";
+                    }
+                    TextView addr = (TextView) view.findViewById(R.id.address);
+                    if (person != null) {
+                        addr.setText(person);
+                    } else {
+                        String address = cursor.getString(cursor.getColumnIndex("address"));
+                        addr.setText(address);
+                    }
                     TextView lastTextTB = (TextView) view.findViewById(R.id.last_text);
-                    lastTextTB.setText(text.getLastText());
-//                }
-
-
+                    lastTextTB.setText(lastText);
             }
         };
     }
@@ -59,13 +62,12 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
     public TextViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View itemView = mCursorAdapter.newView(mContext, mCursorAdapter.getCursor(), viewGroup);
         return new TextViewHolder(itemView);
-
-
     }
 
     @Override
     public void onBindViewHolder(TextViewHolder holder, int i) {
         Cursor c = mCursorAdapter.getCursor();
+        //This code moves the cursor to make sure that it is getting every element in the cursor
         int position = c.getPosition();
         c.move(i - position);
         mCursorAdapter.bindView(holder.itemView, mContext, mCursorAdapter.getCursor());
@@ -90,9 +92,9 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
         notifyItemRangeRemoved(0, size);
     }
 
-    public void deleteText(Cursor c, int swipeDir) {
+    public void deleteText(Cursor c, int position) {
         mCursorAdapter.changeCursor(c);
-        notifyItemRemoved(swipeDir);
+        notifyItemRemoved(position);
     }
 
 }

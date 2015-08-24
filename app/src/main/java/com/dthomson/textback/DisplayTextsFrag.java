@@ -1,15 +1,11 @@
 package com.dthomson.textback;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.provider.ContactsContract;
 import android.provider.Telephony;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,24 +15,22 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RadioButton;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
 
 
 public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     private String FILENAME = "saved_texts";
 
     private static final String TAG = "RecyclerViewFragment";
-    //    private Cursor currentCursor;
     private TextMessageDB dbHelper;
 
     protected RecyclerView mRecyclerView;
     protected MyRecyclerAdapter mAdapter;
     protected RecyclerView.LayoutManager mLayoutManager;
+    private static String numOfPrevSMS = "10";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,7 +59,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         }
 
         if (id == R.id.action_add_text) {
-//            addNewTextMessage();
+//            addNewTextMessage(null);
             displaySmsLog();
             return true;
         }
@@ -79,7 +73,6 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     }
 
     private void displaySmsLog() {
-        //Cursor cursor = managedQuery(allMessages, null, null, null, null); Both are same
         new GetOldSMS().execute((Object[]) null);
     }
 
@@ -103,29 +96,52 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         mRecyclerView.setAdapter(mAdapter);
         return rootView;
     }
-//
-//    private OnItemSelectedListener mListener;
-//
-//    @Override
-//    public void onAttach(Activity activity) {
-//        super.onAttach(activity);
-//        try {
-//            mListener = (OnItemSelectedListener) activity;
-//        } catch (ClassCastException e) {
-//            throw new ClassCastException(activity.toString() + " must implement OnArticleSelectedListener");
-//        }
-//    }
 
-    public void addNewTextMessage() {
-        TextMessage text = new TextMessage("Blue", "Forget you Red");
+
+    public void addNewTextMessage(Cursor results) {
         int count = 0;
         if (mAdapter.getItemCount() != 0) {
             count = mAdapter.getItemCount();
         }
-        dbHelper.addTextMessage(text);
+        if (results != null) {
+            ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results);
+            dbHelper.addTextMessages(textsToAdd);
+        } else {
+            TextMessage text = new TextMessage("Blue", "Forget you Red");
+            dbHelper.addTextMessage(text);
+        }
         Cursor cursor = dbHelper.getAllTexts();
         mAdapter.addTextMessage(cursor, count);
     }
+
+    private ArrayList<TextMessage> cursorToTextMessage(Cursor results) {
+        ArrayList<TextMessage> newTexts = new ArrayList<TextMessage>();
+        while(results.moveToNext()) {
+            int addressIndex = results.getColumnIndex("address");
+            int bodyIndex = results.getColumnIndex("body");
+            int dateIndex = results.getColumnIndex("date");
+            int threadIdIndex = results.getColumnIndex("THREAD_ID");
+            String address = results.getString(addressIndex);
+            Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(address));
+            Cursor contactLookup = getActivity().getContentResolver().
+                    query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME,
+                            ContactsContract.PhoneLookup.PHOTO_FILE_ID}, null, null, null);
+
+            String person = "";
+            if (contactLookup != null && contactLookup.getCount() > 0) {
+                contactLookup.moveToNext();
+                person = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+            }
+            String body = results.getString(bodyIndex);
+            String date = results.getString(dateIndex);
+            String threadId = results.getString(threadIdIndex);
+
+            TextMessage text = new TextMessage(address,person,body,threadId,date,null,null);
+            newTexts.add(text);
+        }
+        return newTexts;
+    }
+
 
     public void defaultTexts() {
         deleteAllTexts();
@@ -142,24 +158,17 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         Cursor emptyCursor = dbHelper.getAllTexts();
         mAdapter.changeCursor(emptyCursor);
     }
-//    public interface OnItemSelectedListener {
-//        public void onTextSelected(TextMessage textMessage);
-//    }
 
     private class GetOldSMS extends AsyncTask<Object, Object, Cursor> {
         @Override
         protected Cursor doInBackground(Object... params) {
-            Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI, null, null, null , "DATE DESC limit 10");
+            Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI, null
+                    , null, null , "DATE DESC limit " + numOfPrevSMS);
             ArrayList<String> whereArg = new ArrayList<String>();
             HashSet<String> alreadyAdded = new HashSet<String>();
             while (cursor.moveToNext()) {
-
                 int threadIdIndex = cursor.getColumnIndex("THREAD_ID");
                 int dateIndex = cursor.getColumnIndex("date");
-                String creator = cursor.getString(cursor.getColumnIndex("Type"));
-                Log.d("Last 5 texts", cursor.getString(cursor.getColumnIndex("BODY"))
-                    + " " + cursor.getString(threadIdIndex) + " From "  + creator);
-
                 String thread = cursor.getString(threadIdIndex);
                 String date = cursor.getString(dateIndex);
                 if (!alreadyAdded.contains(thread)) {
@@ -172,7 +181,6 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             for (String id : alreadyAdded) {
                 where = where + "(THREAD_ID = ? and DATE = ? ) or ";
             }
-            Log.d("Where Arg: ",Integer.toString(alreadyAdded.size()));
             where = where + "1 = 0";
             return getActivity().getContentResolver().
                     query(Telephony.Sms.Inbox.CONTENT_URI, null, where,
@@ -181,11 +189,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
         @Override
         protected void onPostExecute(Cursor result) {
-            while (result.moveToNext()) {
-                int index = result.getColumnIndex("body");
-                Log.d("Text", result.getString(index)+ " " + result.getString(result.getColumnIndex("THREAD_ID")));
-            }
-            Toast.makeText(getActivity(),"DONE!"+Integer.toString(result.getCount()),Toast.LENGTH_LONG).show();
+            addNewTextMessage(result);
         }
     }
 }
