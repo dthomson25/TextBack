@@ -1,8 +1,6 @@
 package com.dthomson.textback;
 
-/**
- * Created by dthomson on 8/6/2015.
- */
+
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
@@ -26,28 +24,29 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
 
             @Override
             public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-                View itemView = LayoutInflater.
-                        from(context).
+                return LayoutInflater.from(context).
                         inflate(R.layout.card_view, viewGroup, false);
-            return itemView;
             }
 
             @Override
             public void bindView(View view, Context context, Cursor cursor) {
-                    String person = cursor.getString(cursor.getColumnIndex("person"));
-                    String lastText = cursor.getString(cursor.getColumnIndex("last_text"));
-                    if (lastText.length() > 40) {
-                        lastText = lastText.substring(0,40) + "...";
-                    }
-                    TextView addr = (TextView) view.findViewById(R.id.address);
-                    if (person != null) {
-                        addr.setText(person);
-                    } else {
-                        String address = cursor.getString(cursor.getColumnIndex("address"));
-                        addr.setText(address);
-                    }
-                    TextView lastTextTB = (TextView) view.findViewById(R.id.last_text);
-                    lastTextTB.setText(lastText);
+                String row_id = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_ROWID));
+                TextView row_idTV = (TextView) view.findViewById(R.id.row_id);
+                row_idTV.setText(row_id);
+                String person = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_PERSON));
+                String lastText = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_LAST_TEXT));
+                if (lastText != null && lastText.length() > 40) {
+                    lastText = lastText.substring(0,40) + "...";
+                }
+                TextView personTV = (TextView) view.findViewById(R.id.address);
+                if (person != null) {
+                    personTV.setText(person);
+                } else {
+                    String address = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_ADDRESS));
+                    personTV.setText(address);
+                }
+                TextView lastTextTV = (TextView) view.findViewById(R.id.last_text);
+                lastTextTV.setText(lastText);
             }
         };
     }
@@ -92,9 +91,11 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
         notifyItemRangeRemoved(0, size);
     }
 
-    public void deleteText(Cursor c, int position) {
-        mCursorAdapter.changeCursor(c);
+    public void deleteText(Cursor newCursor, int position) {
+        mCursorAdapter.changeCursor(newCursor);
         notifyItemRemoved(position);
+        notifyItemRangeChanged(0, newCursor.getCount());
+
     }
 
 }

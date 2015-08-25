@@ -106,6 +106,13 @@ public class TextMessageDB {
         return mDb.insert(SQLITE_TABLE, null, initialValues);
     }
 
+    public int deleteText(String rowID) {
+        String selection = KEY_ROWID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(rowID) };
+        // Issue SQL statement.
+        return mDb.delete(SQLITE_TABLE, selection, selectionArgs);
+    }
+
 
     public boolean deleteAllTexts() {
 

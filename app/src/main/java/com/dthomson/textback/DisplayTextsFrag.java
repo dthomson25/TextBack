@@ -8,6 +8,7 @@ import android.provider.ContactsContract;
 import android.provider.Telephony;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -94,6 +95,27 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         mAdapter = new MyRecyclerAdapter(getActivity(), cursor);
         // Set CustomAdapter as the adapter for RecyclerView.
         mRecyclerView.setAdapter(mAdapter);
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                TextViewHolder textViewholder = (TextViewHolder) viewHolder;
+                String row_ID = textViewholder.rowIDText.getText().toString();
+                dbHelper.deleteText(row_ID);
+                Cursor allTexts = dbHelper.getAllTexts();
+                mAdapter.deleteText(allTexts,swipeDir);
+            }
+        };
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
+
+
         return rootView;
     }
 
@@ -115,8 +137,8 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     }
 
     private ArrayList<TextMessage> cursorToTextMessage(Cursor results) {
-        ArrayList<TextMessage> newTexts = new ArrayList<TextMessage>();
-        while(results.moveToNext()) {
+        ArrayList<TextMessage> newTexts = new ArrayList<>();
+        while (results.moveToNext()) {
             int addressIndex = results.getColumnIndex("address");
             int bodyIndex = results.getColumnIndex("body");
             int dateIndex = results.getColumnIndex("date");
@@ -164,8 +186,8 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         protected Cursor doInBackground(Object... params) {
             Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI, null
                     , null, null , "DATE DESC limit " + numOfPrevSMS);
-            ArrayList<String> whereArg = new ArrayList<String>();
-            HashSet<String> alreadyAdded = new HashSet<String>();
+            ArrayList<String> whereArg = new ArrayList<>();
+            HashSet<String> alreadyAdded = new HashSet<>();
             while (cursor.moveToNext()) {
                 int threadIdIndex = cursor.getColumnIndex("THREAD_ID");
                 int dateIndex = cursor.getColumnIndex("date");
