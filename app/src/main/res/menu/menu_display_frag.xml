@@ -2,5 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/action_clear" android:title="Clear" />
     <item android:id="@+id/action_add_text" android:title="Add" />
+    <item android:id="@+id/action_add_text_demo" android:title="Add demo text" />
     <item android:id="@+id/action_default" android:title="Default" />
 </menu>

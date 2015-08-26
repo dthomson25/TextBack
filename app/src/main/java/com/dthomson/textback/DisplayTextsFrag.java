@@ -60,9 +60,12 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         }
 
         if (id == R.id.action_add_text) {
-//            addNewTextMessage(null);
             displaySmsLog();
             return true;
+        }
+
+        if (id == R.id.action_add_text_demo) {
+            addNewTextMessage(null);
         }
 
         if (id == R.id.action_clear) {
@@ -129,8 +132,8 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results);
             dbHelper.addTextMessages(textsToAdd);
         } else {
-            TextMessage text = new TextMessage("Blue", "Forget you Red");
-            dbHelper.addTextMessage(text);
+            TextMessage blue = new TextMessage("Demo","Blue","Forget your red!",null,null,null,null);
+            dbHelper.addTextMessage(blue);
         }
         Cursor cursor = dbHelper.getAllTexts();
         mAdapter.addTextMessage(cursor, count);

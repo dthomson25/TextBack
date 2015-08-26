@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <TextView
-            android:id="@+id/address"
+            android:id="@+id/person"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Title"
@@ -29,11 +29,25 @@
             android:gravity="center_vertical"
             android:textColor="@android:color/black"
             android:textSize="15dp"
-            android:layout_below="@+id/address"
+            android:layout_below="@+id/person"
             android:layout_marginTop="10dp"
             android:layout_marginLeft="5dp"/>
 
     </RelativeLayout>
+
+    <TextView
+        android:id="@+id/row_id"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        />
+
+    <TextView
+        android:id="@+id/phoneNumber"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        />
 
 </android.support.v7.widget.CardView>
 

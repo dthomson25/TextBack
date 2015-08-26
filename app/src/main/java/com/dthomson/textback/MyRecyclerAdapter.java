@@ -35,16 +35,18 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
                 row_idTV.setText(row_id);
                 String person = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_PERSON));
                 String lastText = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_LAST_TEXT));
+                String address = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_ADDRESS));
                 if (lastText != null && lastText.length() > 40) {
                     lastText = lastText.substring(0,40) + "...";
                 }
-                TextView personTV = (TextView) view.findViewById(R.id.address);
+                TextView personTV = (TextView) view.findViewById(R.id.person);
                 if (person != null) {
                     personTV.setText(person);
                 } else {
-                    String address = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_ADDRESS));
                     personTV.setText(address);
                 }
+                TextView phoneNum = (TextView) view.findViewById(R.id.phoneNumber);
+                phoneNum.setText(address);
                 TextView lastTextTV = (TextView) view.findViewById(R.id.last_text);
                 lastTextTV.setText(lastText);
             }
@@ -94,6 +96,8 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
     public void deleteText(Cursor newCursor, int position) {
         mCursorAdapter.changeCursor(newCursor);
         notifyItemRemoved(position);
+        //0 can be changed to the appropriate
+        // number.
         notifyItemRangeChanged(0, newCursor.getCount());
 
     }
