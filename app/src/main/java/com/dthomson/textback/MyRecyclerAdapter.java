@@ -36,11 +36,11 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
                 String person = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_PERSON));
                 String lastText = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_LAST_TEXT));
                 String address = cursor.getString(cursor.getColumnIndex(TextMessageDB.KEY_ADDRESS));
-                if (lastText != null && lastText.length() > 40) {
+                if (lastText.length() > 40) {
                     lastText = lastText.substring(0,40) + "...";
                 }
                 TextView personTV = (TextView) view.findViewById(R.id.person);
-                if (person != null) {
+                if (!person.equals("")) {
                     personTV.setText(person);
                 } else {
                     personTV.setText(address);
