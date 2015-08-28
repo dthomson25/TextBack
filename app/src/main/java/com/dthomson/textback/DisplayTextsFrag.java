@@ -132,7 +132,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results);
             dbHelper.addTextMessages(textsToAdd);
         } else {
-            TextMessage blue = new TextMessage("Demo","Blue","Forget your red!",null,null,null,null);
+            TextMessage blue = new TextMessage("","Blue","Forget your red!","-1",null,null,null);
             dbHelper.addTextMessage(blue);
         }
         Cursor cursor = dbHelper.getAllTexts();
@@ -142,10 +142,10 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     private ArrayList<TextMessage> cursorToTextMessage(Cursor results) {
         ArrayList<TextMessage> newTexts = new ArrayList<>();
         while (results.moveToNext()) {
-            int addressIndex = results.getColumnIndex("address");
-            int bodyIndex = results.getColumnIndex("body");
-            int dateIndex = results.getColumnIndex("date");
-            int threadIdIndex = results.getColumnIndex("THREAD_ID");
+            int addressIndex = results.getColumnIndex(Telephony.Sms.ADDRESS);
+            int bodyIndex = results.getColumnIndex(Telephony.Sms.BODY);
+            int dateIndex = results.getColumnIndex(Telephony.Sms.DATE);
+            int threadIdIndex = results.getColumnIndex(Telephony.Sms.THREAD_ID);
             String address = results.getString(addressIndex);
             Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(address));
             Cursor contactLookup = getActivity().getContentResolver().
@@ -187,16 +187,23 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     private class GetOldSMS extends AsyncTask<Object, Object, Cursor> {
         @Override
         protected Cursor doInBackground(Object... params) {
-            Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI, null
-                    , null, null , "DATE DESC limit " + numOfPrevSMS);
+//            if(false) {
+            Cursor allTexts = dbHelper.getAllTexts();
+            HashSet<String> alreadyAddedthreadIDs = new HashSet<>();
+            do {
+                String threadID = allTexts.getString(allTexts.getColumnIndex(dbHelper.KEY_THREAD_ID));
+                alreadyAddedthreadIDs.add(threadID);
+            } while (allTexts.moveToNext());
+            Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI,
+                        null, null, null, "DATE DESC limit " + numOfPrevSMS);
             ArrayList<String> whereArg = new ArrayList<>();
             HashSet<String> alreadyAdded = new HashSet<>();
             while (cursor.moveToNext()) {
-                int threadIdIndex = cursor.getColumnIndex("THREAD_ID");
-                int dateIndex = cursor.getColumnIndex("date");
+                int threadIdIndex = cursor.getColumnIndex(Telephony.Sms.THREAD_ID);
+                int dateIndex = cursor.getColumnIndex(Telephony.Sms.DATE);
                 String thread = cursor.getString(threadIdIndex);
                 String date = cursor.getString(dateIndex);
-                if (!alreadyAdded.contains(thread)) {
+                if (!alreadyAdded.contains(thread) && !alreadyAddedthreadIDs.contains(thread)) {
                     whereArg.add(thread);
                     whereArg.add(date);
                     alreadyAdded.add(thread);

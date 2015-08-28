@@ -30,7 +30,7 @@ public class TextViewHolder extends RecyclerView.ViewHolder {
             @Override
             public void onClick(View v) {
                 String phoneNumbers = phoneNumber.getText().toString();
-                if (phoneNumbers.equals("Demo")) {
+                if (phoneNumbers.equals("")) {
                     Uri uri = Uri.parse("smsto:6302090547");
                     Intent it = new Intent(Intent.ACTION_VIEW, uri);
                     v.getContext().startActivity(it);

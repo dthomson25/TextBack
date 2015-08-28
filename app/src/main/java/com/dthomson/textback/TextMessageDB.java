@@ -136,9 +136,9 @@ public class TextMessageDB {
     }
 
     public static void insertSomeTexts() {
-        TextMessage red = new TextMessage("Demo","Red","I'm da best",null,null,null,null);
-        TextMessage yellow = new TextMessage("Demo","Yellow","Pika!",null,null,null,null);
-        TextMessage green = new TextMessage("Demo","Green","I'm important too!",null,null,null,null);
+        TextMessage red = new TextMessage("","Red","I'm da best","-1",null,null,null);
+        TextMessage yellow = new TextMessage("","Yellow","Pika!","-1",null,null,null);
+        TextMessage green = new TextMessage("","Green","I'm important too!","-1",null,null,null);
         addTextMessage(red);
         addTextMessage(yellow);
         addTextMessage(green);
