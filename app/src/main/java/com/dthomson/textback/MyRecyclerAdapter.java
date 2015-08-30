@@ -3,6 +3,7 @@ package com.dthomson.textback;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.provider.Telephony;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,8 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
     public MyRecyclerAdapter(Context context, final Cursor c) {
 
         mContext = context;
+
+
 
         mCursorAdapter = new CursorAdapter(mContext, c, 0) {
 
@@ -95,11 +98,13 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
 
     public void deleteText(Cursor newCursor, int position) {
         mCursorAdapter.changeCursor(newCursor);
-        notifyItemRemoved(position);
-        //0 can be changed to the appropriate
-        // number.
-        notifyItemRangeChanged(0, newCursor.getCount());
+        if(position >= 0) {
+            notifyItemRemoved(position);
+            //TODO if this is has to start with 0
+            notifyItemRangeChanged(0, newCursor.getCount());
+        } else {
+            notifyDataSetChanged();
+        }
 
     }
-
 }

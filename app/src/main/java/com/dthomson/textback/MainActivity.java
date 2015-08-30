@@ -5,6 +5,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 
+//TODO set date of last update
+//TODO Add settings menu
+//TODO add a demo mode with more controls.
+//TODO add privacy settings (what to preview)
+//TODO add preferences that can change the behavior of the app (syncs every ___)
 public class MainActivity extends AppCompatActivity {
 
 
@@ -18,9 +23,6 @@ public class MainActivity extends AppCompatActivity {
             transaction.replace(R.id.current_fragment, displayFrag);
             transaction.commit();
         }
-
-
-
     }
 
     @Override

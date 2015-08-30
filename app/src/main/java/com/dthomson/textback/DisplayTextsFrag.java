@@ -19,7 +19,12 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+
+//TODO Add alarm so texts are added automatically
+    //TODO add notifications for item
+    //TODO add a cancel button for alarm
 
 
 public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
@@ -43,7 +48,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_display_frag, menu);
+        inflater.inflate(R.menu.menu_display_frag_demo, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -66,6 +71,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
         if (id == R.id.action_add_text_demo) {
             addNewTextMessage(null);
+            return true;
         }
 
         if (id == R.id.action_clear) {
@@ -73,7 +79,70 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             return true;
         }
 
+        if (id == R.id.action_set_alarm) {
+            setAlarm();
+            return true;
+        }
+
+        if (id == R.id.action_cancel_alarm) {
+            cancelAlarm();
+            return true;
+        }
+
+        if (id == R.id.action_remove_old) {
+            removeOldSms();
+        }
+
         return super.onOptionsItemSelected(item);
+    }
+
+    private void cancelAlarm() {
+
+    }
+
+    private void setAlarm() {
+
+    }
+
+    private void removeOldSms() {
+        Cursor allStoredTexts = dbHelper.getAllTexts();
+        ArrayList<String> whereArg = new ArrayList<>();
+        HashMap<String,String> threadToRowID = new HashMap<>();
+        if(!allStoredTexts.isFirst()) {
+            allStoredTexts.moveToFirst();
+        }
+        do {
+            String rowID = allStoredTexts.getString(allStoredTexts.getColumnIndex(dbHelper.KEY_ROWID));
+            String date = allStoredTexts.getString(allStoredTexts.getColumnIndex(dbHelper.KEY_DATE));
+            String thread = allStoredTexts.getString(allStoredTexts.getColumnIndex(dbHelper.KEY_THREAD_ID));
+            whereArg.add(thread);
+            whereArg.add(date);
+            threadToRowID.put(thread,rowID);
+        } while (allStoredTexts.moveToNext());
+
+        String where = "";
+        for (int i = 0; i < whereArg.size()/2;i++) {
+            where = where + "(THREAD_ID = ? and DATE > ? ) or ";
+        }
+        where = where + "1 = 0";
+        Cursor newTexts = getActivity().getContentResolver().
+                query(Telephony.Sms.CONTENT_URI, null, where,
+                        whereArg.toArray(new String[whereArg.size()]), "DATE DESC");
+
+        if (newTexts.getCount() > 0) {
+            if (!newTexts.isFirst()) {
+                newTexts.moveToFirst();
+            }
+            do {
+                String threadToDelete = newTexts.getString(
+                        newTexts.getColumnIndex(Telephony.Sms.THREAD_ID));
+                String rowIDToDelete = threadToRowID.get(threadToDelete);
+                dbHelper.deleteText(rowIDToDelete);
+                Cursor allTexts = dbHelper.getAllTexts();
+                mAdapter.deleteText(allTexts,-1);
+
+            } while (newTexts.moveToNext());
+        }
     }
 
     private void displaySmsLog() {
@@ -190,10 +259,15 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 //            if(false) {
             Cursor allTexts = dbHelper.getAllTexts();
             HashSet<String> alreadyAddedthreadIDs = new HashSet<>();
-            do {
-                String threadID = allTexts.getString(allTexts.getColumnIndex(dbHelper.KEY_THREAD_ID));
-                alreadyAddedthreadIDs.add(threadID);
-            } while (allTexts.moveToNext());
+            if ( allTexts.getCount() > 0 ) {
+                if (!allTexts.isFirst()) {
+                    allTexts.moveToFirst();
+                }
+                do {
+                    String threadID = allTexts.getString(allTexts.getColumnIndex(dbHelper.KEY_THREAD_ID));
+                    alreadyAddedthreadIDs.add(threadID);
+                } while (allTexts.moveToNext());
+            }
             Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI,
                         null, null, null, "DATE DESC limit " + numOfPrevSMS);
             ArrayList<String> whereArg = new ArrayList<>();

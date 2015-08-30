@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+//TODO add date column
 
 import java.util.ArrayList;
 
@@ -136,9 +137,9 @@ public class TextMessageDB {
     }
 
     public static void insertSomeTexts() {
-        TextMessage red = new TextMessage("","Red","I'm da best","-1",null,null,null);
-        TextMessage yellow = new TextMessage("","Yellow","Pika!","-1",null,null,null);
-        TextMessage green = new TextMessage("","Green","I'm important too!","-1",null,null,null);
+        TextMessage red = new TextMessage("","Red","I'm da best","-1","0",null,null);
+        TextMessage yellow = new TextMessage("","Yellow","Pika!","-1","0",null,null);
+        TextMessage green = new TextMessage("","Green","I'm important too!","-1","0",null,null);
         addTextMessage(red);
         addTextMessage(yellow);
         addTextMessage(green);
