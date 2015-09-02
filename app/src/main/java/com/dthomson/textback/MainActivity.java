@@ -4,6 +4,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
+import com.dthomson.textback.receiver.MyLifecycleHandler;
 
 //TODO set date of last update
 //TODO Add settings menu
@@ -16,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getApplication().registerActivityLifecycleCallbacks(new MyLifecycleHandler());
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -23,14 +25,9 @@ public class MainActivity extends AppCompatActivity {
             transaction.replace(R.id.current_fragment, displayFrag);
             transaction.commit();
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedState) {
-
-        super.onSaveInstanceState(savedState);
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -43,5 +40,4 @@ public class MainActivity extends AppCompatActivity {
     public void onPause(){
         super.onPause();
     }
-
 }

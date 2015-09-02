@@ -7,4 +7,5 @@
     <item android:id="@+id/action_set_alarm" android:title="Set Alarm" />
     <item android:id="@+id/action_cancel_alarm" android:title="Cancel Alarm" />
     <item android:id="@+id/action_remove_old" android:title="Remove Old SMS" />
+    <item android:id="@+id/action_reset_date" android:title="Reset Last Update Text" />
 </menu>

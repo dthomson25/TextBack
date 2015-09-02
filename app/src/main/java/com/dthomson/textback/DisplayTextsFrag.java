@@ -1,5 +1,7 @@
 package com.dthomson.textback;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -18,6 +20,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.dthomson.textback.receiver.TextBackReceiver;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +33,9 @@ import java.util.HashSet;
 
 public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     private String FILENAME = "saved_texts";
+    private TextBackReceiver alarm;
+    private static final String LAST_UPDATE = "DATE";
+
 
     private static final String TAG = "RecyclerViewFragment";
     private TextMessageDB dbHelper;
@@ -41,6 +48,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        alarm = new TextBackReceiver();
         dbHelper = new TextMessageDB(getActivity().getApplicationContext());
         dbHelper.open();
         setHasOptionsMenu(true);
@@ -66,6 +74,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
         if (id == R.id.action_add_text) {
             displaySmsLog();
+            Toast.makeText(getActivity(),"Added texts that need textbacks",Toast.LENGTH_SHORT).show();
             return true;
         }
 
@@ -91,20 +100,38 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
         if (id == R.id.action_remove_old) {
             removeOldSms();
+            Toast.makeText(getActivity(), "Removed Old Texts", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        if (id == R.id.action_reset_date) {
+            resetDate();
+            Toast.makeText(getActivity(), "Reset Date", Toast.LENGTH_SHORT).show();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void cancelAlarm() {
+    private void resetDate() {
+        SharedPreferences sharedPreferences = getActivity()
+                .getPreferences(Context.MODE_PRIVATE);
+        ;
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(LAST_UPDATE,"0");
+        editor.commit();
+    }
 
+    private void cancelAlarm() {
+        alarm.CancelAlarm(getActivity().getApplicationContext());
     }
 
     private void setAlarm() {
-
+        alarm.SetAlarm(getActivity().getApplicationContext());
     }
 
     private void removeOldSms() {
+
         Cursor allStoredTexts = dbHelper.getAllTexts();
         ArrayList<String> whereArg = new ArrayList<>();
         HashMap<String,String> threadToRowID = new HashMap<>();
@@ -201,7 +228,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results);
             dbHelper.addTextMessages(textsToAdd);
         } else {
-            TextMessage blue = new TextMessage("","Blue","Forget your red!","-1",null,null,null);
+            TextMessage blue = new TextMessage("","Blue","Forget your red!","-1","0",null,null);
             dbHelper.addTextMessage(blue);
         }
         Cursor cursor = dbHelper.getAllTexts();
@@ -268,21 +295,32 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
                     alreadyAddedthreadIDs.add(threadID);
                 } while (allTexts.moveToNext());
             }
+            SharedPreferences sharedPreferences = getActivity()
+                    .getPreferences(Context.MODE_PRIVATE);
+            String lastUpdate = sharedPreferences.getString(LAST_UPDATE, "0");
             Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI,
-                        null, null, null, "DATE DESC limit " + numOfPrevSMS);
+                        null, "DATE > ?", new String[] {lastUpdate}, "DATE DESC limit " + numOfPrevSMS);
             ArrayList<String> whereArg = new ArrayList<>();
             HashSet<String> alreadyAdded = new HashSet<>();
+            Boolean firstText = true;
             while (cursor.moveToNext()) {
                 int threadIdIndex = cursor.getColumnIndex(Telephony.Sms.THREAD_ID);
                 int dateIndex = cursor.getColumnIndex(Telephony.Sms.DATE);
                 String thread = cursor.getString(threadIdIndex);
                 String date = cursor.getString(dateIndex);
+                if (firstText) {
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString(LAST_UPDATE, date);
+                    editor.commit();
+                    firstText = false;
+                }
                 if (!alreadyAdded.contains(thread) && !alreadyAddedthreadIDs.contains(thread)) {
                     whereArg.add(thread);
                     whereArg.add(date);
                     alreadyAdded.add(thread);
                 }
             }
+
             String where = "";
             for (String id : alreadyAdded) {
                 where = where + "(THREAD_ID = ? and DATE = ? ) or ";
