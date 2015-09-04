@@ -11,7 +11,6 @@ import android.provider.Telephony;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,16 +25,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-//TODO Add alarm so texts are added automatically
     //TODO add notifications for item
-    //TODO add a cancel button for alarm
 
 
 public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     private String FILENAME = "saved_texts";
     private TextBackReceiver alarm;
-    private static final String LAST_UPDATE = "DATE";
-
 
     private static final String TAG = "RecyclerViewFragment";
     private TextMessageDB dbHelper;
@@ -43,7 +38,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     protected RecyclerView mRecyclerView;
     protected MyRecyclerAdapter mAdapter;
     protected RecyclerView.LayoutManager mLayoutManager;
-    private static String numOfPrevSMS = "10";
+    private static String numOfPrevSMS = "20";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -114,11 +109,10 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     }
 
     private void resetDate() {
-        SharedPreferences sharedPreferences = getActivity()
-                .getPreferences(Context.MODE_PRIVATE);
-        ;
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(LAST_UPDATE,"0");
+        editor.putString(this.getString(R.string.last_update),"0");
         editor.commit();
     }
 
@@ -227,12 +221,14 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         if (results != null) {
             ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results);
             dbHelper.addTextMessages(textsToAdd);
+            Cursor cursor = dbHelper.getAllTexts();
+            mAdapter.addMultipleTexts(cursor,textsToAdd.size());
         } else {
             TextMessage blue = new TextMessage("","Blue","Forget your red!","-1","0",null,null);
             dbHelper.addTextMessage(blue);
+            Cursor cursor = dbHelper.getAllTexts();
+            mAdapter.addTextMessage(cursor, count);
         }
-        Cursor cursor = dbHelper.getAllTexts();
-        mAdapter.addTextMessage(cursor, count);
     }
 
     private ArrayList<TextMessage> cursorToTextMessage(Cursor results) {
@@ -295,9 +291,10 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
                     alreadyAddedthreadIDs.add(threadID);
                 } while (allTexts.moveToNext());
             }
-            SharedPreferences sharedPreferences = getActivity()
-                    .getPreferences(Context.MODE_PRIVATE);
-            String lastUpdate = sharedPreferences.getString(LAST_UPDATE, "0");
+            SharedPreferences sharedPreferences = getActivity().getSharedPreferences(
+                    getString(R.string.preference_file_key),Context.MODE_PRIVATE);
+            String lastUpdate = sharedPreferences.getString(getString(R.string.last_update), "0");
+
             Cursor cursor = getActivity().getContentResolver().query(Telephony.Sms.CONTENT_URI,
                         null, "DATE > ?", new String[] {lastUpdate}, "DATE DESC limit " + numOfPrevSMS);
             ArrayList<String> whereArg = new ArrayList<>();
@@ -310,7 +307,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
                 String date = cursor.getString(dateIndex);
                 if (firstText) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(LAST_UPDATE, date);
+                    editor.putString(getString(R.string.last_update), date);
                     editor.commit();
                     firstText = false;
                 }

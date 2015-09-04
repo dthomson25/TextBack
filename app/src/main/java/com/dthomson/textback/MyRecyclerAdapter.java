@@ -107,4 +107,12 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<TextViewHolder> {
         }
 
     }
+
+    public void addMultipleTexts(Cursor newCursor, int size) {
+        int count = getItemCount();
+        mCursorAdapter.changeCursor(newCursor);
+        notifyItemRangeInserted(count,size);
+
+
+    }
 }

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">TextBack</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="last_update">DATE</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="preference_file_key">com.dthomson.textback.preference_file_key</string>
 </resources>
