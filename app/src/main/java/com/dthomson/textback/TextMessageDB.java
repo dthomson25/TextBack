@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-//TODO add date column
 
 import java.util.ArrayList;
 
@@ -116,7 +115,9 @@ public class TextMessageDB {
 
 
     public boolean deleteAllTexts() {
-
+        if (!mDb.isOpen()) {
+            open();
+        }
         int doneDelete = mDb.delete(SQLITE_TABLE, null, null);
         Log.w(TAG, Integer.toString(doneDelete));
         return doneDelete > 0;
@@ -124,7 +125,6 @@ public class TextMessageDB {
     }
 
     public static Cursor getAllTexts() {
-
         Cursor mCursor = mDb.query(SQLITE_TABLE, new String[]{KEY_ROWID,
                         KEY_ADDRESS, KEY_PERSON, KEY_LAST_TEXT, KEY_DATE, KEY_THREAD_ID,
                         KEY_PICTURE_ID, KEY_PICTURE_DATA},

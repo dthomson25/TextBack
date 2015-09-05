@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-    //TODO add notifications for item
-
 
 public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     private String FILENAME = "saved_texts";
@@ -45,7 +43,6 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         super.onCreate(savedInstanceState);
         alarm = new TextBackReceiver();
         dbHelper = new TextMessageDB(getActivity().getApplicationContext());
-        dbHelper.open();
         setHasOptionsMenu(true);
     }
 
@@ -125,7 +122,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
     }
 
     private void removeOldSms() {
-
+        dbHelper.open();
         Cursor allStoredTexts = dbHelper.getAllTexts();
         ArrayList<String> whereArg = new ArrayList<>();
         HashMap<String,String> threadToRowID = new HashMap<>();
@@ -164,6 +161,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
             } while (newTexts.moveToNext());
         }
+        dbHelper.close();
     }
 
     private void displaySmsLog() {
@@ -184,7 +182,9 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         mLayoutManager = new LinearLayoutManager(getActivity());
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
+        dbHelper.open();
         Cursor cursor = dbHelper.getAllTexts();
+        dbHelper.close();
         mAdapter = new MyRecyclerAdapter(getActivity(), cursor);
         // Set CustomAdapter as the adapter for RecyclerView.
         mRecyclerView.setAdapter(mAdapter);
@@ -199,8 +199,10 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
                 TextViewHolder textViewholder = (TextViewHolder) viewHolder;
                 String row_ID = textViewholder.rowIDText.getText().toString();
+                dbHelper.open();
                 dbHelper.deleteText(row_ID);
                 Cursor allTexts = dbHelper.getAllTexts();
+                dbHelper.close();
                 mAdapter.deleteText(allTexts,swipeDir);
             }
         };
@@ -218,6 +220,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
         if (mAdapter.getItemCount() != 0) {
             count = mAdapter.getItemCount();
         }
+        dbHelper.open();
         if (results != null) {
             ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results);
             dbHelper.addTextMessages(textsToAdd);
@@ -229,6 +232,7 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
             Cursor cursor = dbHelper.getAllTexts();
             mAdapter.addTextMessage(cursor, count);
         }
+        dbHelper.close();
     }
 
     private ArrayList<TextMessage> cursorToTextMessage(Cursor results) {
@@ -262,25 +266,29 @@ public class DisplayTextsFrag  extends android.support.v4.app.Fragment {
 
     public void defaultTexts() {
         deleteAllTexts();
+        dbHelper.open();
         dbHelper.insertSomeTexts();
         Cursor cursor = dbHelper.getAllTexts();
         mAdapter.defaultCards(cursor);
-
+        dbHelper.close();
 
     }
 
     public void deleteAllTexts() {
         mAdapter.clearTexts();
+        dbHelper.open();
         dbHelper.deleteAllTexts();
         Cursor emptyCursor = dbHelper.getAllTexts();
+        dbHelper.close();
         mAdapter.changeCursor(emptyCursor);
     }
 
     private class GetOldSMS extends AsyncTask<Object, Object, Cursor> {
         @Override
         protected Cursor doInBackground(Object... params) {
-//            if(false) {
+            dbHelper.open();
             Cursor allTexts = dbHelper.getAllTexts();
+            dbHelper.close();
             HashSet<String> alreadyAddedthreadIDs = new HashSet<>();
             if ( allTexts.getCount() > 0 ) {
                 if (!allTexts.isFirst()) {

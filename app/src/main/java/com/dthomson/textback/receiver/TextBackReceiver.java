@@ -1,6 +1,8 @@
 package com.dthomson.textback.receiver;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,9 +13,12 @@ import android.net.Uri;
 import android.os.PowerManager;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
+import android.app.Notification.BigPictureStyle;
+import android.support.v7.app.NotificationCompat;
 import android.widget.Toast;
 
 import com.dthomson.textback.DisplayTextsFrag;
+import com.dthomson.textback.MainActivity;
 import com.dthomson.textback.MyRecyclerAdapter;
 import com.dthomson.textback.R;
 import com.dthomson.textback.TextMessage;
@@ -41,16 +46,83 @@ public class TextBackReceiver extends BroadcastReceiver {
         addNotifications(context, dbHelper);
         dbHelper.close();
         isRunningString = isRunningString + Boolean.toString(isAppRunning);
-        Toast.makeText(context, isRunningString, Toast.LENGTH_LONG).show();
+        Toast.makeText(context, isRunningString, Toast.LENGTH_SHORT).show();
 
         //Release the lock
         wl.release();
 
     }
 
+    //Notification.VISIBILITY_PRIVATE
+    //NotificationVisibility.PUBLIC;
     private void addNotifications(Context context, TextMessageDB dbHelper) {
+        // Sets an ID for the notification
+        int mNotificationId = 001;
+        // Gets an instance of the NotificationManager service
+        NotificationManager mNotifyMgr =
+                (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
+        // Builds the notification and issues it.
+        Cursor allTexts = dbHelper.getAllTexts();
+        ArrayList<TextMessage> texts = getTextsFromAppDBCursor(allTexts);
+        Notification.Builder notificationBuilder = new Notification.Builder(context)
+                .setSmallIcon(R.drawable.ic_textsms_white_48dp)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setCategory(Notification.CATEGORY_MESSAGE)
+                .setContentTitle("Text Back")
+                .setContentText(Integer.toString(texts.size()) +
+                        "Texts that you need to respond to.");
+        notificationBuilder.setVibrate(new long[] { 500, 500, 500, 500, 500 });
+        Notification.InboxStyle inboxStyle =
+                new Notification.InboxStyle();
+        String[] events = new String[texts.size()];
+        // Sets a title for the Inbox in expanded layout
+        for (int i = 0; i < texts.size(); i++) {
+            TextMessage test = texts.get(i);
+            String person = test.getPerson();
+            String lastText = test.getLastText();
+            inboxStyle.setBigContentTitle("Event tracker details:");
+            events[i] = person + " : " + lastText;
+            inboxStyle.addLine(events[i]);
+        }
+        // Moves the expanded layout object into the notification object.
+        notificationBuilder.setStyle(inboxStyle);
 
 
+        Intent resultIntent = new Intent(context, MainActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                resultIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        notificationBuilder.setContentIntent(resultPendingIntent);
+        mNotifyMgr.notify(mNotificationId, notificationBuilder.build());
+    }
+
+
+
+    private ArrayList<TextMessage> getTextsFromAppDBCursor(Cursor allTexts) {
+        ArrayList<TextMessage> newTexts = new ArrayList<>();
+        if ( allTexts.getCount() > 0 ) {
+            if (!allTexts.isFirst()) {
+                allTexts.moveToFirst();
+            }
+            do {
+                int addressIndex = allTexts.getColumnIndex(TextMessageDB.KEY_ADDRESS);
+                int bodyIndex = allTexts.getColumnIndex(TextMessageDB.KEY_LAST_TEXT);
+                int dateIndex = allTexts.getColumnIndex(TextMessageDB.KEY_DATE);
+                int threadIdIndex = allTexts.getColumnIndex(TextMessageDB.KEY_THREAD_ID);
+                int personIndex = allTexts.getColumnIndex(TextMessageDB.KEY_PERSON);
+                String address = allTexts.getString(addressIndex);
+                String person = allTexts.getString(personIndex);
+                String body = allTexts.getString(bodyIndex);
+                String date = allTexts.getString(dateIndex);
+                String threadId = allTexts.getString(threadIdIndex);
+                TextMessage text = new TextMessage(address, person, body, threadId, date, null, null);
+                newTexts.add(text);
+            } while (allTexts.moveToNext());
+        }
+        return newTexts;
     }
 
     private void addNewTexts(boolean isAppRunning, Context context, TextMessageDB dbHelper) {
@@ -68,7 +140,7 @@ public class TextBackReceiver extends BroadcastReceiver {
         String lastUpdate = sharedPreferences.getString(context.getString(R.string.last_update), "0");
         Cursor possResults = context.getContentResolver().query(Telephony.Sms.CONTENT_URI,
                 null, "DATE > ?", new String[]{lastUpdate}, "DATE DESC limit 10");
-        //TODO find any to get numOfPrevSMS in the above query instead of 10
+        //TODO find any to get numOfPrevSMS in the above query instead of hardcoded 10
         ArrayList<String> whereArg = new ArrayList<>();
         HashSet<String> alreadyAdded = new HashSet<>();
         Boolean firstText = true;
@@ -98,7 +170,7 @@ public class TextBackReceiver extends BroadcastReceiver {
         Cursor results = context.getContentResolver().query(Telephony.Sms.Inbox.CONTENT_URI, null, where,
                         whereArg.toArray(new String[whereArg.size()]), "DATE DESC");
         if (results != null) {
-            ArrayList<TextMessage> textsToAdd = cursorToTextMessage(results,context);
+            ArrayList<TextMessage> textsToAdd = getTextsFromTextDB(results, context);
             dbHelper.addTextMessages(textsToAdd);
         }
 
@@ -119,7 +191,7 @@ public class TextBackReceiver extends BroadcastReceiver {
         return  alreadyAddedthreadIDs;
     }
 
-    private ArrayList<TextMessage> cursorToTextMessage(Cursor results, Context context) {
+    private ArrayList<TextMessage> getTextsFromTextDB(Cursor results, Context context) {
         ArrayList<TextMessage> newTexts = new ArrayList<>();
         while (results.moveToNext()) {
             int addressIndex = results.getColumnIndex(Telephony.Sms.ADDRESS);
